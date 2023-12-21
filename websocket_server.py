@@ -13,13 +13,14 @@ class Aluno:
 alunos = set()
 connected_clients = set()
 
-async def registrar_aluno(websocket, path):
+async def processar_mensagem(websocket, message):
     global alunos, connected_clients
-    connected_clients.add(websocket)
 
     try:
-        async for message in websocket:
-            data = json.loads(message)
+        data = json.loads(message)
+        action = data.get("action")
+
+        if action == "registrar_aluno":
             nome = data["nome"]
             nota1 = float(data["nota1"])
             nota2 = float(data["nota2"])
@@ -39,6 +40,25 @@ async def registrar_aluno(websocket, path):
             await asyncio.gather(
                 *[client.send(json.dumps(response)) for client in connected_clients]
             )
+
+        elif action == "remover_aluno":
+            nome_aluno_remover = data["nome"]
+            alunos = {aluno for aluno in alunos if aluno.nome != nome_aluno_remover}
+
+            # Broadcast para todos os clientes conectados para atualizar a lista
+            await asyncio.gather(
+                *[client.send(json.dumps({"action": "remover_aluno", "nome": nome_aluno_remover})) for client in connected_clients]
+            )
+    except websockets.exceptions.ConnectionClosedOK:
+        pass
+
+async def registrar_aluno(websocket, path):
+    global connected_clients
+    connected_clients.add(websocket)
+
+    try:
+        async for message in websocket:
+            await processar_mensagem(websocket, message)
     except websockets.exceptions.ConnectionClosedOK:
         pass
     finally:

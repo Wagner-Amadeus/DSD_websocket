@@ -15,6 +15,7 @@
         <label for="nota2">Nota 2:</label>
         <input type="number" id="nota2" required><br>
         <button type="button" onclick="registrarAluno()">Registrar Aluno</button>
+        <button type="button" onclick="removerAluno()">Remover Aluno</button>
     </form>
 
     <ul id="alunos"></ul>
@@ -26,19 +27,28 @@
             const data = JSON.parse(event.data);
             const alunosList = document.getElementById("alunos");
 
-            const li = document.createElement("li");
-            li.textContent = `Nome: ${data.nome}, Nota 1: ${data.nota1}, Nota 2: ${data.nota2}, Média: ${data.media}, Situação: ${data.situacao}`;
-            
-            alunosList.appendChild(li);
+            if (data.action === "remover_aluno") {
+                const alunoRemover = document.querySelector(`li[data-nome="${data.nome}"]`);
+                if (alunoRemover) {
+                    alunoRemover.remove();
+                }
+            } else {
+                const li = document.createElement("li");
+                li.setAttribute("data-nome", data.nome);
+                li.textContent = `Nome: ${data.nome}, Nota 1: ${data.nota1}, Nota 2: ${data.nota2}, Média: ${data.media}, Situação: ${data.situacao}`;
+
+                alunosList.appendChild(li);
+            }
         };
 
         function registrarAluno() {
             const form = document.getElementById("form");
             const nome = document.getElementById("nome").value;
-            const nota1 = document.getElementById("nota1").value;
-            const nota2 = document.getElementById("nota2").value;
+            const nota1 = parseFloat(document.getElementById("nota1").value);
+            const nota2 = parseFloat(document.getElementById("nota2").value);
 
             const data = {
+                action: "registrar_aluno",
                 nome: nome,
                 nota1: nota1,
                 nota2: nota2
@@ -47,6 +57,17 @@
             socket.send(JSON.stringify(data));
 
             form.reset();
+        }
+
+        function removerAluno() {
+            const nomeRemover = prompt("Digite o nome do aluno a ser removido:");
+            if (nomeRemover) {
+                const data = {
+                    action: "remover_aluno",
+                    nome: nomeRemover
+                };
+                socket.send(JSON.stringify(data));
+            }
         }
     </script>
 </body>
