@@ -41,7 +41,7 @@
     <script>
         const socket = new WebSocket("ws://localhost:8765");
 
-        socket.onmessage = function(event) {
+        socket.onmessage = function (event) {
             const data = JSON.parse(event.data);
             const corpoTabela = document.getElementById("corpo-tabela-alunos");
 
@@ -50,32 +50,38 @@
                 if (alunoRemover) {
                     alunoRemover.remove();
                 }
-            } else {
-                const tr = document.createElement("tr");
-                tr.setAttribute("data-nome", data.nome);
+            } else if (data.action === "lista_alunos") {
+                // Limpar a tabela
+                corpoTabela.innerHTML = "";
 
-                const tdNome = document.createElement("td");
-                tdNome.textContent = data.nome;
+                // Adicionar os alunos recebidos à tabela
+                data.alunos.forEach(aluno => {
+                    const tr = document.createElement("tr");
+                    tr.setAttribute("data-nome", aluno.nome);
 
-                const tdNota1 = document.createElement("td");
-                tdNota1.textContent = data.nota1;
+                    const tdNome = document.createElement("td");
+                    tdNome.textContent = aluno.nome;
 
-                const tdNota2 = document.createElement("td");
-                tdNota2.textContent = data.nota2;
+                    const tdNota1 = document.createElement("td");
+                    tdNota1.textContent = aluno.nota1;
 
-                const tdMedia = document.createElement("td");
-                tdMedia.textContent = data.media;
+                    const tdNota2 = document.createElement("td");
+                    tdNota2.textContent = aluno.nota2;
 
-                const tdSituacao = document.createElement("td");
-                tdSituacao.textContent = data.situacao;
+                    const tdMedia = document.createElement("td");
+                    tdMedia.textContent = aluno.media;
 
-                tr.appendChild(tdNome);
-                tr.appendChild(tdNota1);
-                tr.appendChild(tdNota2);
-                tr.appendChild(tdMedia);
-                tr.appendChild(tdSituacao);
+                    const tdSituacao = document.createElement("td");
+                    tdSituacao.textContent = aluno.situacao;
 
-                corpoTabela.appendChild(tr);
+                    tr.appendChild(tdNome);
+                    tr.appendChild(tdNota1);
+                    tr.appendChild(tdNota2);
+                    tr.appendChild(tdMedia);
+                    tr.appendChild(tdSituacao);
+
+                    corpoTabela.appendChild(tr);
+                });
 
                 // Ordenar a tabela por média em ordem decrescente
                 const rows = Array.from(corpoTabela.getElementsByTagName("tr"));

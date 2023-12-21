@@ -13,6 +13,23 @@ class Aluno:
 alunos = set()
 connected_clients = set()
 
+async def enviar_lista_alunos():
+    global alunos
+    lista_alunos = [
+        {
+            "nome": aluno.nome,
+            "nota1": aluno.nota1,
+            "nota2": aluno.nota2,
+            "media": aluno.media,
+            "situacao": aluno.situacao
+        } for aluno in alunos
+    ]
+
+    # Envia a lista de alunos para todos os clientes conectados
+    await asyncio.gather(
+        *[client.send(json.dumps({"action": "lista_alunos", "alunos": lista_alunos})) for client in connected_clients]
+    )
+
 async def processar_mensagem(websocket, message):
     global alunos, connected_clients
 
@@ -29,6 +46,7 @@ async def processar_mensagem(websocket, message):
             alunos.add(aluno)
 
             response = {
+                "action": "registrar_aluno",
                 "nome": aluno.nome,
                 "nota1": aluno.nota1,
                 "nota2": aluno.nota2,
@@ -41,6 +59,9 @@ async def processar_mensagem(websocket, message):
                 *[client.send(json.dumps(response)) for client in connected_clients]
             )
 
+            # Após registrar um novo aluno, envie a lista atualizada para todos os clientes
+            await enviar_lista_alunos()
+
         elif action == "remover_aluno":
             nome_aluno_remover = data["nome"]
             alunos = {aluno for aluno in alunos if aluno.nome != nome_aluno_remover}
@@ -49,6 +70,14 @@ async def processar_mensagem(websocket, message):
             await asyncio.gather(
                 *[client.send(json.dumps({"action": "remover_aluno", "nome": nome_aluno_remover})) for client in connected_clients]
             )
+
+            # Após remover um aluno, envie a lista atualizada para todos os clientes
+            await enviar_lista_alunos()
+
+        elif action == "conectar_cliente":
+            # Enviar lista de alunos para cliente recém-conectado
+            await enviar_lista_alunos()
+
     except websockets.exceptions.ConnectionClosedOK:
         pass
 
@@ -57,6 +86,9 @@ async def registrar_aluno(websocket, path):
     connected_clients.add(websocket)
 
     try:
+        # Enviar lista de alunos quando o cliente se conectar
+        await enviar_lista_alunos()
+
         async for message in websocket:
             await processar_mensagem(websocket, message)
     except websockets.exceptions.ConnectionClosedOK:
