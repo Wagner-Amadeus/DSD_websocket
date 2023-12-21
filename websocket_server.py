@@ -1,6 +1,7 @@
 import asyncio
 import websockets
 import json
+from reportlab.pdfgen import canvas
 
 class Aluno:
     def __init__(self, nome, nota1, nota2):
@@ -17,17 +18,45 @@ async def enviar_lista_alunos():
     global alunos
     lista_alunos = [
         {
+            "posicao": i + 1,
             "nome": aluno.nome,
             "nota1": aluno.nota1,
             "nota2": aluno.nota2,
             "media": aluno.media,
             "situacao": aluno.situacao
-        } for aluno in alunos
+        } for i, aluno in enumerate(sorted(alunos, key=lambda x: x.media, reverse=True))
     ]
 
     # Envia a lista de alunos para todos os clientes conectados
     await asyncio.gather(
         *[client.send(json.dumps({"action": "lista_alunos", "alunos": lista_alunos})) for client in connected_clients]
+    )
+
+async def gerar_relatorio():
+    global alunos
+
+    # Crie um documento PDF usando a biblioteca reportlab
+    pdf_filename = "relatorio_alunos.pdf"
+    c = canvas.Canvas(pdf_filename)
+    c.drawString(100, 800, "Relatório de Alunos")
+
+    # Adicione os dados dos alunos ao PDF
+    y = 780
+    for i, aluno in enumerate(sorted(alunos, key=lambda x: x.media, reverse=True), start=1):
+        c.drawString(100, y, f"POS: {i}")
+        c.drawString(150, y, f"Nome: {aluno.nome}")
+        c.drawString(150, y - 15, f"Nota 1: {aluno.nota1}")
+        c.drawString(150, y - 30, f"Nota 2: {aluno.nota2}")
+        c.drawString(150, y - 45, f"Média: {aluno.media}")
+        c.drawString(150, y - 60, f"Situação: {aluno.situacao}")
+        y -= 80
+
+    # Salve o documento PDF
+    c.save()
+
+    # Envie o nome do arquivo para os clientes baixarem
+    await asyncio.gather(
+        *[client.send(json.dumps({"action": "baixar_relatorio", "filename": pdf_filename})) for client in connected_clients]
     )
 
 async def processar_mensagem(websocket, message):
@@ -46,7 +75,6 @@ async def processar_mensagem(websocket, message):
             alunos.add(aluno)
 
             response = {
-                "action": "registrar_aluno",
                 "nome": aluno.nome,
                 "nota1": aluno.nota1,
                 "nota2": aluno.nota2,
@@ -59,7 +87,7 @@ async def processar_mensagem(websocket, message):
                 *[client.send(json.dumps(response)) for client in connected_clients]
             )
 
-            # Após registrar um novo aluno, envie a lista atualizada para todos os clientes
+            # Enviar a lista atualizada para todos os clientes
             await enviar_lista_alunos()
 
         elif action == "remover_aluno":
@@ -71,12 +99,13 @@ async def processar_mensagem(websocket, message):
                 *[client.send(json.dumps({"action": "remover_aluno", "nome": nome_aluno_remover})) for client in connected_clients]
             )
 
-            # Após remover um aluno, envie a lista atualizada para todos os clientes
-            await enviar_lista_alunos()
-
         elif action == "conectar_cliente":
             # Enviar lista de alunos para cliente recém-conectado
             await enviar_lista_alunos()
+
+        elif action == "gerar_relatorio":
+            # Gerar o relatório em PDF
+            await gerar_relatorio()
 
     except websockets.exceptions.ConnectionClosedOK:
         pass

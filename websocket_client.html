@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,20 +8,12 @@
 
     <style>
         .cabecalho-tabela th {
-            padding-right: 20px; /* Adicione o valor de espaçamento desejado */
-        }
-
-        /* Adicione a cor azul para notas maiores ou iguais a 7 */
-        .azul {
-            color: blue;
-        }
-
-        /* Adicione a cor vermelha para notas menores que 7 */
-        .vermelha {
-            color: red;
+            padding-right: 20px;
+            /* Adicione o valor de espaçamento desejado */
         }
     </style>
 </head>
+
 <body>
     <h1>WebSocket Client</h1>
     <form id="form">
@@ -32,6 +25,7 @@
         <input type="number" id="nota2" required><br>
         <button type="button" onclick="registrarAluno()">Registrar Aluno</button>
         <button type="button" onclick="removerAluno()">Remover Aluno</button>
+        <button type="button" onclick="gerarRelatorio()">Gerar Relatório</button>
         <br><br>
     </form>
 
@@ -48,7 +42,7 @@
         </thead>
         <tbody id="corpo-tabela-alunos"></tbody>
     </table>
-    
+
     <script>
         const socket = new WebSocket("ws://localhost:8765");
 
@@ -65,18 +59,13 @@
                 // Limpar a tabela
                 corpoTabela.innerHTML = "";
 
-                // Ordenar os alunos por média em ordem decrescente
-                const alunosOrdenados = data.alunos.sort((a, b) => b.media - a.media);
-
                 // Adicionar os alunos recebidos à tabela
-                alunosOrdenados.forEach((aluno, index) => {
+                data.alunos.forEach(aluno => {
                     const tr = document.createElement("tr");
                     tr.setAttribute("data-nome", aluno.nome);
 
-                    // Adiciona a classe azul ou vermelha com base na nota
                     const tdPosicao = document.createElement("td");
-                    tdPosicao.textContent = index + 1;
-                    tr.appendChild(tdPosicao);
+                    tdPosicao.textContent = aluno.posicao;
 
                     const tdNome = document.createElement("td");
                     tdNome.textContent = aluno.nome;
@@ -93,21 +82,7 @@
                     const tdSituacao = document.createElement("td");
                     tdSituacao.textContent = aluno.situacao;
 
-                    // Adiciona a classe azul ou vermelha com base na nota
-                    if (aluno.media >= 7) {
-                        tdNome.classList.add("azul");
-                        tdNota1.classList.add("azul");
-                        tdNota2.classList.add("azul");
-                        tdMedia.classList.add("azul");
-                        tdSituacao.classList.add("azul");
-                    } else {
-                        tdNome.classList.add("vermelha");
-                        tdNota1.classList.add("vermelha");
-                        tdNota2.classList.add("vermelha");
-                        tdMedia.classList.add("vermelha");
-                        tdSituacao.classList.add("vermelha");
-                    }
-
+                    tr.appendChild(tdPosicao);
                     tr.appendChild(tdNome);
                     tr.appendChild(tdNota1);
                     tr.appendChild(tdNota2);
@@ -116,6 +91,24 @@
 
                     corpoTabela.appendChild(tr);
                 });
+
+                // Ordenar a tabela por posição
+                const rows = Array.from(corpoTabela.getElementsByTagName("tr"));
+                rows.sort((a, b) => {
+                    const posA = parseInt(a.getElementsByTagName("td")[0].textContent);
+                    const posB = parseInt(b.getElementsByTagName("td")[0].textContent);
+                    return posA - posB;
+                });
+
+                // Reorganizar as linhas na tabela
+                corpoTabela.innerHTML = "";
+                rows.forEach(row => corpoTabela.appendChild(row));
+            } else if (data.action === "baixar_relatorio") {
+                // Baixar o relatório em PDF
+                const downloadLink = document.createElement("a");
+                downloadLink.href = data.filename;
+                downloadLink.download = "relatorio_alunos.pdf";
+                downloadLink.click();
             }
         };
 
@@ -147,6 +140,15 @@
                 socket.send(JSON.stringify(data));
             }
         }
+
+        function gerarRelatorio() {
+            // Solicitar ao servidor para gerar o relatório
+            const data = {
+                action: "gerar_relatorio"
+            };
+            socket.send(JSON.stringify(data));
+        }
     </script>
 </body>
+
 </html>
