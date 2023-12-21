@@ -9,6 +9,15 @@
         .cabecalho-tabela th {
             padding-right: 20px; /* Adicione o valor de espaçamento desejado */
         }
+
+        /* Adiciona estilos para cores condicionais */
+        .azul {
+            color: blue;
+        }
+
+        .vermelho {
+            color: red;
+        }
     </style>
 </head>
 <body>
@@ -73,6 +82,21 @@
 
                     const tdSituacao = document.createElement("td");
                     tdSituacao.textContent = aluno.situacao;
+
+                    // Adiciona classes de estilo com base na nota
+                    if (aluno.media >= 7) {
+                        tdNome.classList.add("azul");
+                        tdNota1.classList.add("azul");
+                        tdNota2.classList.add("azul");
+                        tdMedia.classList.add("azul");
+                        tdSituacao.classList.add("azul");
+                    } else {
+                        tdNome.classList.add("vermelho");
+                        tdNota1.classList.add("vermelho");
+                        tdNota2.classList.add("vermelho");
+                        tdMedia.classList.add("vermelho");
+                        tdSituacao.classList.add("vermelho");
+                    }
 
                     tr.appendChild(tdNome);
                     tr.appendChild(tdNota1);
