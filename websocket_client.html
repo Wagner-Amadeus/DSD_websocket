@@ -10,12 +10,13 @@
             padding-right: 20px; /* Adicione o valor de espaçamento desejado */
         }
 
-        /* Adiciona estilos para cores condicionais */
+        /* Adicione a cor azul para notas maiores ou iguais a 7 */
         .azul {
             color: blue;
         }
 
-        .vermelho {
+        /* Adicione a cor vermelha para notas menores que 7 */
+        .vermelha {
             color: red;
         }
     </style>
@@ -37,6 +38,7 @@
     <table id="tabela-alunos">
         <thead>
             <tr class="cabecalho-tabela">
+                <th>POS</th>
                 <th>Nome do Aluno</th>
                 <th>Nota 1</th>
                 <th>Nota 2</th>
@@ -63,10 +65,18 @@
                 // Limpar a tabela
                 corpoTabela.innerHTML = "";
 
+                // Ordenar os alunos por média em ordem decrescente
+                const alunosOrdenados = data.alunos.sort((a, b) => b.media - a.media);
+
                 // Adicionar os alunos recebidos à tabela
-                data.alunos.forEach(aluno => {
+                alunosOrdenados.forEach((aluno, index) => {
                     const tr = document.createElement("tr");
                     tr.setAttribute("data-nome", aluno.nome);
+
+                    // Adiciona a classe azul ou vermelha com base na nota
+                    const tdPosicao = document.createElement("td");
+                    tdPosicao.textContent = index + 1;
+                    tr.appendChild(tdPosicao);
 
                     const tdNome = document.createElement("td");
                     tdNome.textContent = aluno.nome;
@@ -83,7 +93,7 @@
                     const tdSituacao = document.createElement("td");
                     tdSituacao.textContent = aluno.situacao;
 
-                    // Adiciona classes de estilo com base na nota
+                    // Adiciona a classe azul ou vermelha com base na nota
                     if (aluno.media >= 7) {
                         tdNome.classList.add("azul");
                         tdNota1.classList.add("azul");
@@ -91,11 +101,11 @@
                         tdMedia.classList.add("azul");
                         tdSituacao.classList.add("azul");
                     } else {
-                        tdNome.classList.add("vermelho");
-                        tdNota1.classList.add("vermelho");
-                        tdNota2.classList.add("vermelho");
-                        tdMedia.classList.add("vermelho");
-                        tdSituacao.classList.add("vermelho");
+                        tdNome.classList.add("vermelha");
+                        tdNota1.classList.add("vermelha");
+                        tdNota2.classList.add("vermelha");
+                        tdMedia.classList.add("vermelha");
+                        tdSituacao.classList.add("vermelha");
                     }
 
                     tr.appendChild(tdNome);
@@ -106,18 +116,6 @@
 
                     corpoTabela.appendChild(tr);
                 });
-
-                // Ordenar a tabela por média em ordem decrescente
-                const rows = Array.from(corpoTabela.getElementsByTagName("tr"));
-                rows.sort((a, b) => {
-                    const mediaA = parseFloat(a.getElementsByTagName("td")[3].textContent);
-                    const mediaB = parseFloat(b.getElementsByTagName("td")[3].textContent);
-                    return mediaB - mediaA;
-                });
-
-                // Reorganizar as linhas na tabela
-                corpoTabela.innerHTML = "";
-                rows.forEach(row => corpoTabela.appendChild(row));
             }
         };
 
