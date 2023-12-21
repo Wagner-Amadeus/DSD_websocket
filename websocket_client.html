@@ -45,11 +45,11 @@
 
     <script>
         const socket = new WebSocket("ws://localhost:8765");
-
+    
         socket.onmessage = function (event) {
             const data = JSON.parse(event.data);
             const corpoTabela = document.getElementById("corpo-tabela-alunos");
-
+    
             if (data.action === "remover_aluno") {
                 const alunoRemover = document.querySelector(`tr[data-nome="${data.nome}"]`);
                 if (alunoRemover) {
@@ -58,40 +58,47 @@
             } else if (data.action === "lista_alunos") {
                 // Limpar a tabela
                 corpoTabela.innerHTML = "";
-
+    
                 // Adicionar os alunos recebidos à tabela
                 data.alunos.forEach(aluno => {
                     const tr = document.createElement("tr");
                     tr.setAttribute("data-nome", aluno.nome);
-
+    
                     const tdPosicao = document.createElement("td");
                     tdPosicao.textContent = aluno.posicao;
-
+    
                     const tdNome = document.createElement("td");
                     tdNome.textContent = aluno.nome;
-
+    
                     const tdNota1 = document.createElement("td");
                     tdNota1.textContent = aluno.nota1;
-
+    
                     const tdNota2 = document.createElement("td");
                     tdNota2.textContent = aluno.nota2;
-
+    
                     const tdMedia = document.createElement("td");
                     tdMedia.textContent = aluno.media;
-
+    
                     const tdSituacao = document.createElement("td");
                     tdSituacao.textContent = aluno.situacao;
-
+    
+                    // Verificar a nota e aplicar a cor
+                    if (aluno.media >= 7) {
+                        tr.style.color = "blue";  // Cor AZUL para notas >= 7
+                    } else {
+                        tr.style.color = "red";   // Cor VERMELHA para notas < 7
+                    }
+    
                     tr.appendChild(tdPosicao);
                     tr.appendChild(tdNome);
                     tr.appendChild(tdNota1);
                     tr.appendChild(tdNota2);
                     tr.appendChild(tdMedia);
                     tr.appendChild(tdSituacao);
-
+    
                     corpoTabela.appendChild(tr);
                 });
-
+    
                 // Ordenar a tabela por posição
                 const rows = Array.from(corpoTabela.getElementsByTagName("tr"));
                 rows.sort((a, b) => {
@@ -99,7 +106,7 @@
                     const posB = parseInt(b.getElementsByTagName("td")[0].textContent);
                     return posA - posB;
                 });
-
+    
                 // Reorganizar as linhas na tabela
                 corpoTabela.innerHTML = "";
                 rows.forEach(row => corpoTabela.appendChild(row));
@@ -111,25 +118,25 @@
                 downloadLink.click();
             }
         };
-
+    
         function registrarAluno() {
             const form = document.getElementById("form");
             const nome = document.getElementById("nome").value;
             const nota1 = parseFloat(document.getElementById("nota1").value);
             const nota2 = parseFloat(document.getElementById("nota2").value);
-
+    
             const data = {
                 action: "registrar_aluno",
                 nome: nome,
                 nota1: nota1,
                 nota2: nota2
             };
-
+    
             socket.send(JSON.stringify(data));
-
+    
             form.reset();
         }
-
+    
         function removerAluno() {
             const nomeRemover = prompt("Digite o nome do aluno a ser removido:");
             if (nomeRemover) {
@@ -140,7 +147,7 @@
                 socket.send(JSON.stringify(data));
             }
         }
-
+    
         function gerarRelatorio() {
             // Solicitar ao servidor para gerar o relatório
             const data = {
@@ -149,6 +156,7 @@
             socket.send(JSON.stringify(data));
         }
     </script>
+    
 </body>
 
 </html>
