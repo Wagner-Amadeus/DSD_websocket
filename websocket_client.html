@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WebSocket Client</title>
+
+    <style>
+        .cabecalho-tabela th {
+            padding-right: 30px; /* Adicione o valor de espaçamento desejado */
+        }
+    </style>
 </head>
 <body>
     <h1>WebSocket Client</h1>
@@ -16,28 +22,55 @@
         <input type="number" id="nota2" required><br>
         <button type="button" onclick="registrarAluno()">Registrar Aluno</button>
         <button type="button" onclick="removerAluno()">Remover Aluno</button>
+        <br><br>
     </form>
 
-    <ul id="alunos"></ul>
-
+    <table id="tabela-alunos">
+        <thead>
+            <tr class="cabecalho-tabela">
+                <th>Nome do Aluno</th>
+                <th>Nota 1</th>
+                <th>Nota 2</th>
+                <th>Situação</th>
+            </tr>
+        </thead>
+        <tbody id="corpo-tabela-alunos"></tbody>
+    </table>
+    
     <script>
         const socket = new WebSocket("ws://localhost:8765");
 
         socket.onmessage = function(event) {
             const data = JSON.parse(event.data);
-            const alunosList = document.getElementById("alunos");
+            const corpoTabela = document.getElementById("corpo-tabela-alunos");
 
             if (data.action === "remover_aluno") {
-                const alunoRemover = document.querySelector(`li[data-nome="${data.nome}"]`);
+                const alunoRemover = document.querySelector(`tr[data-nome="${data.nome}"]`);
                 if (alunoRemover) {
                     alunoRemover.remove();
                 }
             } else {
-                const li = document.createElement("li");
-                li.setAttribute("data-nome", data.nome);
-                li.textContent = `Nome: ${data.nome}, Nota 1: ${data.nota1}, Nota 2: ${data.nota2}, Média: ${data.media}, Situação: ${data.situacao}`;
+                const tr = document.createElement("tr");
+                tr.setAttribute("data-nome", data.nome);
 
-                alunosList.appendChild(li);
+                const tdNome = document.createElement("td");
+                tdNome.textContent = data.nome;
+
+                const tdNota1 = document.createElement("td");
+                tdNota1.textContent = data.nota1;
+
+                const tdNota2 = document.createElement("td");
+                tdNota2.textContent = data.nota2;
+
+                const tdSituacao = document.createElement("td");
+                tdSituacao.textContent = data.situacao;
+
+                tr.appendChild(tdNome);
+                tr.appendChild(tdNota1);
+                tr.appendChild(tdNota2);
+                tr.appendChild(tdSituacao);
+
+                corpoTabela.appendChild(tr);
             }
         };
 
