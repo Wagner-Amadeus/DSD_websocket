@@ -1,8 +1,9 @@
-import asyncio
-import websockets
-import json
-from reportlab.pdfgen import canvas
+import asyncio                          # Suportar programação assíncrona.
+import websockets                       # Implementar WebSocket no servidor.
+import json                             # Tratar com codificação e decodificação de objetos JSON.
+from reportlab.pdfgen import canvas     # Criar documentos PDF.
 
+# Definição da classe Aluno
 class Aluno:
     def __init__(self, nome, nota1, nota2):
         self.nome = nome
@@ -11,11 +12,14 @@ class Aluno:
         self.media = (nota1 + nota2) / 2
         self.situacao = "Aprovado" if self.media >= 7 else "Reprovado"
 
-alunos = set()
-connected_clients = set()
 
+alunos = set()                          # Conjunto para armazenar instâncias da classe Aluno. 
+connected_clients = set()               # Conjunto para armazenar clientes conectados ao servidor WebSocket.
+
+# Declaração de função assíncrona
 async def enviar_lista_alunos():
     global alunos
+    # Compreensão de lista para criar uma lista de dicionários de alunos
     lista_alunos = [
         {
             "posicao": i + 1,
@@ -25,7 +29,7 @@ async def enviar_lista_alunos():
             "media": aluno.media,
             "situacao": aluno.situacao
         } for i, aluno in enumerate(sorted(alunos, key=lambda x: x.media, reverse=True))
-    ]
+    ]   # Ordenada a lista com base na média dos alunos em ordem decrescente.
 
     # Envia a lista de alunos para todos os clientes conectados
     await asyncio.gather(
