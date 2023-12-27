@@ -15,7 +15,7 @@
 </head>
 
 <body>
-    <h1>WebSocket Client</h1>
+    <h1>Sistema de Ranking de Notas em tempo Real</h1>
     <form id="form">
         <label for="nome">Nome:</label>
         <input type="text" id="nome" required><br>
@@ -44,26 +44,35 @@
     </table>
 
     <script>
+        // Criação de uma instância WebSocket e definição do servidor WebSocket a ser conectado.
         const socket = new WebSocket("ws://localhost:8765");
     
+        // Manipulador de eventos para mensagens recebidas do servidor WebSocket.
         socket.onmessage = function (event) {
+            // Parse da mensagem JSON recebida.
             const data = JSON.parse(event.data);
+            // Obtém a referência ao corpo da tabela de alunos na página HTML.
             const corpoTabela = document.getElementById("corpo-tabela-alunos");
+
+            // Lógica para manipular diferentes tipos de ações recebidas do servidor.
     
             if (data.action === "remover_aluno") {
+                // Remove a linha da tabela correspondente ao aluno removido.
                 const alunoRemover = document.querySelector(`tr[data-nome="${data.nome}"]`);
                 if (alunoRemover) {
                     alunoRemover.remove();
                 }
             } else if (data.action === "lista_alunos") {
-                // Limpar a tabela
+                // Limpa a tabela antes de adicionar os novos alunos recebidos.
                 corpoTabela.innerHTML = "";
     
                 // Adicionar os alunos recebidos à tabela
                 data.alunos.forEach(aluno => {
+                    // Cria uma nova linha (tr) na tabela.
                     const tr = document.createElement("tr");
                     tr.setAttribute("data-nome", aluno.nome);
-    
+                    
+                    // Cria células (td) para cada propriedade do aluno.
                     const tdPosicao = document.createElement("td");
                     tdPosicao.textContent = aluno.posicao;
     
@@ -89,6 +98,7 @@
                         tr.style.color = "red";   // Cor VERMELHA para notas < 7
                     }
     
+                    // Adiciona as células à linha da tabela.
                     tr.appendChild(tdPosicao);
                     tr.appendChild(tdNome);
                     tr.appendChild(tdNota1);
@@ -96,6 +106,7 @@
                     tr.appendChild(tdMedia);
                     tr.appendChild(tdSituacao);
     
+                    // Adiciona a linha à tabela.
                     corpoTabela.appendChild(tr);
                 });
     
@@ -118,13 +129,15 @@
                 downloadLink.click();
             }
         };
-    
+
+        // Função para registrar um aluno no servidor.
         function registrarAluno() {
             const form = document.getElementById("form");
             const nome = document.getElementById("nome").value;
             const nota1 = parseFloat(document.getElementById("nota1").value);
             const nota2 = parseFloat(document.getElementById("nota2").value);
     
+            // Cria um objeto contendo os dados do aluno e a ação a ser realizada.
             const data = {
                 action: "registrar_aluno",
                 nome: nome,
@@ -132,6 +145,7 @@
                 nota2: nota2
             };
     
+            // Envia os dados para o servidor como uma string JSON.
             socket.send(JSON.stringify(data));
     
             form.reset();
